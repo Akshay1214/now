@@ -1,0 +1,181 @@
+# # import re
+# # fileToRead = 'readText.txt'
+# # fileToWrite = 'emailExtracted.txt'
+# # delimiterInFile = [',', ';']
+# # def validateEmail(strEmail):
+# #     # .* Zero or more characters of any type. 
+# #     if re.match("(.*)@(.*).(.*)", strEmail):
+# #         return True
+# #     return False
+# # def writeFile(listData):
+# #     file = open(fileToWrite, 'w+')
+# #     strData = ""
+# #     for item in listData:
+# #         strData = strData+item+'\n'
+# #     file.write(strData)
+# # listEmail = []
+# # file = open(fileToRead, 'r') 
+# # listLine = file.readlines()
+# # for itemLine in listLine:
+# #     item =str(itemLine)
+# #     for delimeter in delimiterInFile:
+# #         item = item.replace(str(delimeter),' ')
+    
+# #     wordList = item.split()
+# #     for word in wordList:
+# #         if(validateEmail(word)):
+# #             listEmail.append(word)
+# # if listEmail:
+# #     uniqEmail = set(listEmail)
+# #     print(len(uniqEmail),"emails collected!")
+# #     writeFile(uniqEmail)
+# # else:
+# #     print("No email found.")
+
+# Importing Libraries
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
+import openpyxl
+from openpyxl import load_workbook
+from openpyxl import Workbook
+import requests
+from bs4 import BeautifulSoup
+import os
+
+url_list = ["https://www.flipkart.com/search?q=Samsung%20Mobile&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=on&as=off",
+           "https://www.flipkart.com/search?q=IPhone%20Mobile&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=on&as=off",
+           "https://www.flipkart.com/search?q=OnePlus%20Mobile&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=on&as=off",
+           "https://www.flipkart.com/search?q=Vivo+Mobile&otracker=AS_Query_HistoryAutoSuggest_2_0&otracker1=AS_Query_HistoryAutoSuggest_2_0&marketplace=FLIPKART&as-show=on&as=off&as-pos=2&as-type=HISTORY"]  
+
+for urls in url_list:
+    # print(urls)
+    url = urls
+    url_name = url
+    # Loading Chrome Browser headless(in background)
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    browser = webdriver.Chrome(options=options) 
+    browser.get(url)
+
+    # Scraping Data
+    result_2 = []
+    list_1 = []
+    products = browser.find_elements(By.CLASS_NAME, "_2kHMtA")
+    for product in products:
+        product_url = product.find_element(By.CLASS_NAME, "_1fQZEK").get_attribute("href")
+        result_2.append(product_url)
+    for url in result_2:
+        time.sleep(1)
+        browser.get(url)
+        try:
+            product_name = browser.find_element(By.CLASS_NAME, 'B_NuCI').text
+        except:
+            product_name = "No Data"
+        product_url = url
+        try:
+            product_price = browser.find_element(By.CLASS_NAME, "_25b18c").text
+        except:
+            product_price = "No Data"
+        try:
+            product_ratings = browser.find_element(By.CLASS_NAME, "_3LWZlK").text
+        except:
+            product_ratings = "No Data"
+        try:
+            no_feedback = browser.find_element(By.CLASS_NAME, '_2_R_DZ').text
+        except:
+            no_feedback = "No Data"
+        try:
+            product_description = browser.find_element(By.CLASS_NAME, "_3zQntF").text
+        except:
+            product_description = "No Data"
+        try:
+            thumbnail = browser.find_elements(By.CLASS_NAME, "_1AuMiq")
+            no_thumbnails = len(thumbnail)
+        except:
+            no_thumbnails = "No Data"
+        #time.sleep(1)
+        print("Scraping Data")
+        list_1.append([product_name, product_url ,product_price, product_ratings ,no_feedback, product_description, no_thumbnails])
+    browser.quit()
+
+    # making requests instance
+    reqs = requests.get(url_name)
+
+    # using the BeautifulSoup module
+    soup = BeautifulSoup(reqs.text, 'html.parser')
+
+    # displaying the title
+
+    for title in soup.find_all('title'):
+        title.get_text()
+    title_name = title.get_text()
+
+
+    category = title_name.split("-")[0]
+    print(category)
+
+    save_data = category + ".xlsx" 
+
+    # Saving data in excel
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+    headers = ["Product Name", "Product URL", "Product Price", "Product Ratings"  ,"No Feedback", "Product Description", "No of Thumbnails"]
+    sheet.append(headers)
+    for row in list_1:
+        sheet.append(row)
+    sheet.title = category
+    wb.save(save_data)
+    print("======================================================================================================================================")
+
+
+
+
+
+# # importing the modules
+# import requests
+# from bs4 import BeautifulSoup
+# import os
+
+# # target url
+# url = "https://www.flipkart.com/search?q=Samsung%20Mobile&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=on&as=off"
+
+# # making requests instance
+# reqs = requests.get(url)
+
+# # using the BeautifulSoup module
+# soup = BeautifulSoup(reqs.text, 'html.parser')
+
+# # displaying the title
+
+# for title in soup.find_all('title'):
+# 	title.get_text()
+# title_name = title.get_text()
+
+
+# category = title_name.split("-")[0]
+
+
+# save_data = category + ".xlsx" 
+
+# # Saving data in excel
+# wb = openpyxl.Workbook()
+# sheet = wb.active
+# headers = ["Product Name", "Product URL", "Product Price", "Product Ratings"  ,"No Feedback", "Product Description", "No of Thumbnails"]
+# sheet.append(headers)
+# # for row in list_1:
+# #     sheet.append(row)
+# sheet.title = category
+# wb.save(save_data)
+
+
+
+
+
+
+
+
+
+
+
+
